@@ -1,0 +1,141 @@
+A team of data analysts at Amazon is working to identify data patterns. During their analysis, they found a category of string they call dominant string:
+
+It has an even length.
+
+The string contains at least one character with a frequency that matches exactly half of the length of the string.
+
+Given a string s of length n, determine the number of its distinct substrings that are dominant strings.
+
+Example
+
+s = "idafddfi"
+
+All even-length substrings of s with a frequency of any character that is exactly half their length are:
+
+Substring	Length of Substring	Frequent Character	Frequency of Character
+id	2	d/i	1
+da	2	d/a	1
+af	2	a/f	1
+fd	2	f/d	1
+df	2	d/f	1
+fi	2	f/i	1
+dafd	4	d	2
+afdd	4	d	2
+fddf	4	f/d	2
+ddfi	4	i	2
+idafdd	6	d	3
+dafddf	6	d	3
+There are 13 dominant substrings in s.
+
+Function Description
+
+Complete the function getDominantStringCount in the editor below.
+
+getDominantStringCount has the following parameter:
+
+string s: the string to analyze
+
+Returns
+
+int: the number of dominant substrings in s
+
+Constraints
+
+1 ≤ n ≤ 10^5
+
+s consists of lowercase English letters in the range 'a' to 'j' (inclusive) only.
+
+Sample Case 0
+
+Input:
+
+s = "aaaaiid"
+Output:
+
+3
+Explanation:
+
+The dominant substrings are:
+
+ai
+
+id
+
+aaid
+
+For every character x from a, to j, find how many substrings have that character as half the count. Done by converting the occurrences of x as +1 and the rest as -1, and looking for 0-sum subarrays. Can be done with a hashmap of prefix sum counts.
+
+This will double count substrings like aabb, so for every pair of characters from a to j, repeat the above process with +1 for the first character, -1 for the second character, and resetting the hashmap for any other character. Subtract counts instead of adding here.
+
+O(55N, must be fine with the constraints)
+
+
+#include <iostream>
+#include <unordered_map>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+// Function to count dominant substrings based on the specified character conditions
+int getDominantStringCount(const string &s) {
+    int dominant_count = 0;
+    int n = s.length();
+
+    // Step 1: Count for each character from 'a' to 'j'
+    for (char target = 'a'; target <= 'j'; ++target) {
+        unordered_map<int, int> prefix_sum_count; // Map to count occurrences of prefix sums
+        int prefix_sum = 0;
+        prefix_sum_count[0] = 1; // Initialize with 0 sum
+        
+        // Iterate through each character in the string
+        for (char c : s) {
+            // Update prefix sum: +1 for target character, -1 for others
+            if (c == target) {
+                prefix_sum += 1; // +1 for target character
+            } else {
+                prefix_sum -= 1; // -1 for other characters
+            }
+
+            // Check how many times this prefix sum has been seen before
+            dominant_count += prefix_sum_count[prefix_sum];
+
+            // Increment the count of the current prefix sum in the hashmap
+            prefix_sum_count[prefix_sum]++;
+        }
+    }
+
+    // Step 2: Count pairs of characters (a, b) from 'a' to 'j'
+    for (char first = 'a'; first <= 'j'; ++first) {
+        for (char second = first + 1; second <= 'j'; ++second) {
+            unordered_map<int, int> prefix_sum_count; // Reset for each character pair
+            int prefix_sum = 0;
+            prefix_sum_count[0] = 1; // Initialize with 0 sum
+
+            // Iterate through each character in the string again
+            for (char c : s) {
+                // Update prefix sum: +1 for first character, -1 for second character
+                if (c == first) {
+                    prefix_sum += 1; // +1 for first character
+                } else if (c == second) {
+                    prefix_sum -= 1; // -1 for second character
+                }
+
+                // Check how many times this prefix sum has been seen before
+                dominant_count -= prefix_sum_count[prefix_sum];
+
+                // Increment the count of the current prefix sum in the hashmap
+                prefix_sum_count[prefix_sum]++;
+            }
+        }
+    }
+
+    return dominant_count; // Return the total count of dominant substrings
+}
+
+int main() {
+    string s = "idafddfi"; // Example input
+    int result = getDominantStringCount(s);
+    cout << "Number of dominant substrings: " << result << endl; // Output the result
+    return 0;
+}
